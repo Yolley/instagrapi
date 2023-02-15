@@ -1,6 +1,6 @@
 from copy import deepcopy
 from json.decoder import JSONDecodeError
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from instagrapi.exceptions import (
     ClientError,
@@ -337,7 +337,9 @@ class UserMixin:
             self.logger.exception(e)
             return None
 
-    def search_users_v1(self, query: str, count: int) -> UsersPage:
+    def search_users_v1(
+        self, query: str, count: int, page_token: Optional[str]
+    ) -> UsersPage:
         """
         Search users by a query (Private Mobile API)
         Parameters
@@ -346,20 +348,25 @@ class UserMixin:
             Query to search
         count: int
             The count of search results
+        page_token: str | None
+            Token for the next page
         Returns
         -------
         List[UserShort]
             List of users
         """
-        results = self.private_request(
-            "users/search/", params={"query": query, "count": count}
-        )
+        params = {"query": query, "count": count}
+        if page_token:
+            params["page_token"] = page_token
+        results = self.private_request("users/search/", params=params)
         return UsersPage(
             users=[extract_user_short(user) for user in results["users"]],
             page_token=results.get("page_token"),
         )
 
-    def search_users(self, query: str, count: int = 50) -> UsersPage:
+    def search_users(
+        self, query: str, count: int = 50, page_token: Optional[str] = None
+    ) -> UsersPage:
         """
         Search users by a query
         Parameters
@@ -368,12 +375,14 @@ class UserMixin:
             Query string to search
         count: int
             The count of search results
+        page_token: str | None
+            Token for the next page
         Returns
         -------
         List[UserShort]
             List of User short object
         """
-        return self.search_users_v1(query, count)
+        return self.search_users_v1(query, count, page_token)
 
     def search_followers_v1(self, user_id: str, query: str) -> List[UserShort]:
 
