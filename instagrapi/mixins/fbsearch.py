@@ -6,7 +6,7 @@ from instagrapi.extractors import (
     extract_track,
     extract_user_short,
 )
-from instagrapi.types import Hashtag, Location, Track, UserShort
+from instagrapi.types import Hashtag, Location, Track, UserShort, UsersPage
 
 
 class FbSearchMixin:
@@ -38,7 +38,7 @@ class FbSearchMixin:
         result = self.private_request("fbsearch/topsearch_flat/", params=params)
         return result["list"]
 
-    def search_users(self, query: str) -> List[UserShort]:
+    def search_users(self, query: str) -> UsersPage:
         params = {
             "search_surface": "user_search_page",
             "timezone_offset": self.timezone_offset,
@@ -46,7 +46,9 @@ class FbSearchMixin:
             "q": query,
         }
         result = self.private_request("users/search/", params=params)
-        return [extract_user_short(item) for item in result["users"]]
+        return UsersPage(
+            users=[extract_user_short(item) for item in result["users"]], page_token=result.get("page_token")
+        )
 
     def search_music(self, query: str) -> List[Track]:
         params = {

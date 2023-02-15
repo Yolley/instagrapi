@@ -83,6 +83,11 @@ class UserShort(BaseModel):
     stories: List = []
 
 
+class UsersPage(BaseModel):
+    users: List[UserShort]
+    page_token: Optional[str] = None
+
+
 class Usertag(BaseModel):
     user: UserShort
     x: float

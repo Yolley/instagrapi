@@ -10,7 +10,7 @@ from instagrapi.exceptions import (
     UserNotFound,
 )
 from instagrapi.extractors import extract_user_gql, extract_user_short, extract_user_v1
-from instagrapi.types import Relationship, User, UserShort
+from instagrapi.types import Relationship, User, UsersPage, UserShort
 from instagrapi.utils import json_value
 
 
@@ -337,7 +337,7 @@ class UserMixin:
             self.logger.exception(e)
             return None
 
-    def search_users_v1(self, query: str, count: int) -> List[UserShort]:
+    def search_users_v1(self, query: str, count: int) -> UsersPage:
         """
         Search users by a query (Private Mobile API)
         Parameters
@@ -354,10 +354,12 @@ class UserMixin:
         results = self.private_request(
             "users/search/", params={"query": query, "count": count}
         )
-        users = results.get("users", [])
-        return [extract_user_short(user) for user in users]
+        return UsersPage(
+            users=[extract_user_short(user) for user in results["users"]],
+            page_token=results.get("page_token"),
+        )
 
-    def search_users(self, query: str, count: int = 50) -> List[UserShort]:
+    def search_users(self, query: str, count: int = 50) -> UsersPage:
         """
         Search users by a query
         Parameters
