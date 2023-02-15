@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from instagrapi.extractors import (
     extract_hashtag_v1,
@@ -38,16 +38,19 @@ class FbSearchMixin:
         result = self.private_request("fbsearch/topsearch_flat/", params=params)
         return result["list"]
 
-    def search_users(self, query: str) -> UsersPage:
+    def search_users(self, query: str, page_token: Optional[str] = None) -> UsersPage:
         params = {
             "search_surface": "user_search_page",
             "timezone_offset": self.timezone_offset,
             "count": 30,
             "q": query,
         }
+        if params:
+            params["page_token"] = page_token
         result = self.private_request("users/search/", params=params)
         return UsersPage(
-            users=[extract_user_short(item) for item in result["users"]], page_token=result.get("page_token")
+            users=[extract_user_short(item) for item in result["users"]],
+            page_token=result.get("page_token"),
         )
 
     def search_music(self, query: str) -> List[Track]:
