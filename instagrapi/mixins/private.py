@@ -72,6 +72,7 @@ class PrivateRequestMixin:
     change_password_handler = manual_change_password
     private_request_logger = logging.getLogger("private_request")
     request_timeout = 1
+    private_timeout = None
     last_response = None
     last_json = {}
 
@@ -81,6 +82,7 @@ class PrivateRequestMixin:
         self.email = kwargs.pop("email", None)
         self.phone_number = kwargs.pop("phone_number", None)
         self.request_timeout = kwargs.pop("request_timeout", self.request_timeout)
+        self.private_timeout = kwargs.pop("private_timeout", self.private_timeout)
         super().__init__(*args, **kwargs)
 
     def small_delay(self):
@@ -295,10 +297,14 @@ class PrivateRequestMixin:
                     data = generate_signature(dumps(data))
                     if extra_sig:
                         data += "&".join(extra_sig)
-                response = self.private.post(api_url, data=data, params=params)
+                response = self.private.post(
+                    api_url, data=data, params=params, timeout=self.private_timeout
+                )
             else:  # GET
                 self.private.headers.pop("Content-Type", None)
-                response = self.private.get(api_url, params=params)
+                response = self.private.get(
+                    api_url, params=params, timeout=self.private_timeout
+                )
             self.logger.debug(
                 "private_request %s: %s (%s)",
                 response.status_code,

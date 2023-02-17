@@ -33,6 +33,7 @@ class PublicRequestMixin:
     last_public_json = {}
     public_request_logger = logging.getLogger("public_request")
     request_timeout = 1
+    public_timeout = None
 
     def __init__(self, *args, **kwargs):
         self.public = requests.Session()
@@ -47,6 +48,7 @@ class PublicRequestMixin:
             }
         )
         self.request_timeout = kwargs.pop("request_timeout", self.request_timeout)
+        self.public_timeout = kwargs.pop("public_timeout", self.public_timeout)
         super().__init__(*args, **kwargs)
 
     def public_request(
@@ -107,9 +109,13 @@ class PublicRequestMixin:
             time.sleep(self.request_timeout)
         try:
             if data is not None:  # POST
-                response = self.public.data(url, data=data, params=params)
+                response = self.public.data(
+                    url, data=data, params=params, timeout=self.public_timeout
+                )
             else:  # GET
-                response = self.public.get(url, params=params)
+                response = self.public.get(
+                    url, params=params, timeout=self.public_timeout
+                )
 
             expected_length = int(response.headers.get("Content-Length") or 0)
             actual_length = response.raw.tell()
